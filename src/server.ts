@@ -14,8 +14,16 @@ const app = express();
 
 app.use(express.json());
 
+const allowedOrigins = ['https://appointmentsmedical.netlify.app', 'http://localhost:3000'];
+
 app.use(cors({
-  origin: ['https://appointmentsmedical.netlify.app', 'http://localhost:3000'],
+  origin: function(origin, callback) {
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) === -1) {
+      return callback(new Error('La política CORS para este sitio no permite el acceso desde el origen especificado.'), false);
+    }
+    return callback(null, true);
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
@@ -35,25 +43,30 @@ initializePool();
 app.post('/api/register', async (req, res) => {
   try {
     const { nombre, apePaterno, apeMaterno, correo, contrase, edad, tipoSangre, genero } = req.body;
-    console.log('Datos de registro recibidos:', { nombre, apePaterno, apeMaterno, correo, edad,  tipoSangre,  genero });
+    console.log('Datos de registro recibidos:', { nombre, apePaterno, apeMaterno, correo, edad, tipoSangre, genero });
 
     // Validación de campos obligatorios
     if (!nombre || !apePaterno || !apeMaterno || !correo || !contrase || !tipoSangre || !genero) {
+      console.log('Error: Campos incompletos');
       return res.status(400).json({ error: 'Todos los campos son requeridos' });
     }
 
     // Validación de formato de correo electrónico
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(correo)) {
+      console.log('Error: Formato de correo inválido');
       return res.status(400).json({ error: 'Formato de correo electrónico inválido' });
     }
 
     // Verificar si el correo ya está registrado
+    console.log('Verificando si el correo ya existe...');
     const [existingUsers] = await pool.execute<RowDataPacket[]>('SELECT id FROM usuarios WHERE correo = ?', [correo]);
     if (existingUsers.length > 0) {
+      console.log('Error: Correo ya registrado');
       return res.status(409).json({ error: 'El correo electrónico ya está registrado' });
     }
 
+    console.log('Hasheando contraseña...');
     const hashedPassword = await bcrypt.hash(contrase, 10);
 
     // Preparar la consulta SQL y los valores
@@ -76,11 +89,14 @@ app.post('/api/register', async (req, res) => {
 
     sql += ') VALUES (' + '?,'.repeat(values.length).slice(0, -1) + ')';
 
+    console.log('Ejecutando consulta SQL:', sql);
+    console.log('Valores:', values);
+
     // Insertar nuevo usuario
     const [result] = await pool.execute<OkPacket>(sql, values);
 
     if (result.insertId) {
-      console.log('Usuario registrado:', result.insertId);
+      console.log('Usuario registrado exitosamente:', result.insertId);
       return res.status(201).json({ 
         message: 'Usuario registrado exitosamente', 
         id: result.insertId,
@@ -90,7 +106,11 @@ app.post('/api/register', async (req, res) => {
       throw new Error('No se pudo insertar el usuario');
     }
   } catch (error) {
-    console.error('Error en el registro:', error);
+    console.error('Error detallado en el registro:', error);
+    if (error instanceof Error) {
+      console.error('Mensaje de error:', error.message);
+      console.error('Stack trace:', error.stack);
+    }
     return res.status(500).json({ error: 'Error interno del servidor' });
   }
 });

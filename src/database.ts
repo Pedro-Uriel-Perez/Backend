@@ -1,24 +1,21 @@
 import mysql from 'mysql2/promise';
-import dotenv from 'dotenv';
-
-dotenv.config();
-
 export async function getConnection() {
-  const host = process.env.DB_HOST || 'localhost';
-  const user = process.env.DB_USER || 'root';
-  const password = process.env.DB_PASSWORD || '';
-  const database = process.env.DB_NAME || 'citasmedicas';
-  const port = parseInt(process.env.DB_PORT || '3306');
-
-  return await mysql.createPool({
-    host,
-    user,
-    password,
-    database,
-    port,
-    connectionLimit: 10,
-    ssl: process.env.NODE_ENV === 'production' ? {
-      rejectUnauthorized: true
-    } : undefined
-  });
-}
+    console.log('Intentando conectar a la base de datos');
+    try {
+      const pool = await mysql.createPool({
+        host: process.env.DB_HOST,
+        user: process.env.DB_USER,
+        password: process.env.DB_PASSWORD,
+        database: process.env.DB_NAME,
+        port: parseInt(process.env.DB_PORT || '3306'),
+        ssl: {
+          rejectUnauthorized: true
+        }
+      });
+      console.log('Conexión a la base de datos exitosa');
+      return pool;
+    } catch (error) {
+      console.error('Error al conectar con la base de datos:', error);
+      throw error;
+    }
+  }
