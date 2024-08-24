@@ -11,6 +11,7 @@ const database_1 = require("./database");
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 app.use(express_1.default.json());
+app.options('*', (0, cors_1.default)());
 app.use((0, cors_1.default)({
     origin: ['https://appointmentsmedical.netlify.app', 'http://localhost:3000'],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -22,6 +23,9 @@ async function initializePool() {
     pool = await (0, database_1.getConnection)();
 }
 initializePool();
+app.get('/api/test', (req, res) => {
+    res.json({ message: 'Backend funcionando correctamentee' });
+});
 // Ruta de registro
 app.post('/api/register', async (req, res) => {
     try {
@@ -29,18 +33,23 @@ app.post('/api/register', async (req, res) => {
         console.log('Datos de registro recibidos:', { nombre, apePaterno, apeMaterno, correo, edad, tipoSangre, genero });
         // Validación de campos obligatorios
         if (!nombre || !apePaterno || !apeMaterno || !correo || !contrase || !tipoSangre || !genero) {
+            console.log('Error: Campos incompletos');
             return res.status(400).json({ error: 'Todos los campos son requeridos' });
         }
         // Validación de formato de correo electrónico
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(correo)) {
+            console.log('Error: Formato de correo inválido');
             return res.status(400).json({ error: 'Formato de correo electrónico inválido' });
         }
         // Verificar si el correo ya está registrado
+        console.log('Verificando si el correo ya existe...');
         const [existingUsers] = await pool.execute('SELECT id FROM usuarios WHERE correo = ?', [correo]);
         if (existingUsers.length > 0) {
+            console.log('Error: Correo ya registrado');
             return res.status(409).json({ error: 'El correo electrónico ya está registrado' });
         }
+        console.log('Hasheando contraseña...');
         const hashedPassword = await bcrypt_1.default.hash(contrase, 10);
         // Preparar la consulta SQL y los valores
         let sql = 'INSERT INTO usuarios (nombre, apePaterno, apeMaterno, correo, contrase';
@@ -59,10 +68,12 @@ app.post('/api/register', async (req, res) => {
             values.push(genero);
         }
         sql += ') VALUES (' + '?,'.repeat(values.length).slice(0, -1) + ')';
+        console.log('Ejecutando consulta SQL:', sql);
+        console.log('Valores:', values);
         // Insertar nuevo usuario
         const [result] = await pool.execute(sql, values);
         if (result.insertId) {
-            console.log('Usuario registrado:', result.insertId);
+            console.log('Usuario registrado exitosamente:', result.insertId);
             return res.status(201).json({
                 message: 'Usuario registrado exitosamente',
                 id: result.insertId,
@@ -74,7 +85,11 @@ app.post('/api/register', async (req, res) => {
         }
     }
     catch (error) {
-        console.error('Error en el registro:', error);
+        console.error('Error detallado en el registro:', error);
+        if (error instanceof Error) {
+            console.error('Mensaje de error:', error.message);
+            console.error('Stack trace:', error.stack);
+        }
         return res.status(500).json({ error: 'Error interno del servidor' });
     }
 });

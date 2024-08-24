@@ -5,25 +5,26 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getConnection = void 0;
 const promise_1 = __importDefault(require("mysql2/promise"));
-const dotenv_1 = __importDefault(require("dotenv"));
-dotenv_1.default.config();
 async function getConnection() {
-    const host = process.env.DB_HOST || 'localhost';
-    const user = process.env.DB_USER || 'root';
-    const password = process.env.DB_PASSWORD || '';
-    const database = process.env.DB_NAME || 'citasmedicas';
-    const port = parseInt(process.env.DB_PORT || '3306');
-    return await promise_1.default.createPool({
-        host,
-        user,
-        password,
-        database,
-        port,
-        connectionLimit: 10,
-        ssl: process.env.NODE_ENV === 'production' ? {
-            rejectUnauthorized: true
-        } : undefined
-    });
+    console.log('Intentando conectar a la base de datos');
+    try {
+        const pool = await promise_1.default.createPool({
+            host: process.env.DB_HOST,
+            user: process.env.DB_USER,
+            password: process.env.DB_PASSWORD,
+            database: process.env.DB_NAME,
+            port: parseInt(process.env.DB_PORT || '3306'),
+            ssl: {
+                rejectUnauthorized: true
+            }
+        });
+        console.log('Conexión a la base de datos exitosa');
+        return pool;
+    }
+    catch (error) {
+        console.error('Error al conectar con la base de datos:', error);
+        throw error;
+    }
 }
 exports.getConnection = getConnection;
 //# sourceMappingURL=database.js.map
