@@ -33,7 +33,7 @@ async function initializePool() {
 initializePool();
 
 app.get('/api/test', (req, res) => {
-  res.json({ message: 'Backend funcionando correctamente' });
+  res.json({ message: 'Backend funcionando correctamentee' });
 });
 
 
