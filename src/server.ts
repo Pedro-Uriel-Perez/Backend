@@ -14,16 +14,11 @@ const app = express();
 
 app.use(express.json());
 
-const allowedOrigins = ['https://appointmentsmedical.netlify.app', 'http://localhost:3000'];
+app.options('*', cors());
+
 
 app.use(cors({
-  origin: function(origin, callback) {
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.indexOf(origin) === -1) {
-      return callback(new Error('La política CORS para este sitio no permite el acceso desde el origen especificado.'), false);
-    }
-    return callback(null, true);
-  },
+  origin: ['https://appointmentsmedical.netlify.app', 'http://localhost:3000'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
@@ -37,6 +32,9 @@ async function initializePool() {
 
 initializePool();
 
+app.get('/api/test', (req, res) => {
+  res.json({ message: 'Backend funcionando correctamente' });
+});
 
 
 // Ruta de registro
