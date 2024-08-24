@@ -8,14 +8,11 @@ const promise_1 = __importDefault(require("mysql2/promise"));
 const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
 async function getConnection() {
-    const host = process.env.DB_HOST;
-    const user = process.env.DB_USER;
-    const password = process.env.DB_PASSWORD;
-    const database = process.env.DB_NAME;
+    const host = process.env.DB_HOST || 'localhost';
+    const user = process.env.DB_USER || 'root';
+    const password = process.env.DB_PASSWORD || '';
+    const database = process.env.DB_NAME || 'citasmedicas';
     const port = parseInt(process.env.DB_PORT || '3306');
-    if (!host || !user || !password || !database) {
-        throw new Error('Database configuration is incomplete');
-    }
     return await promise_1.default.createPool({
         host,
         user,
@@ -23,9 +20,9 @@ async function getConnection() {
         database,
         port,
         connectionLimit: 10,
-        ssl: {
+        ssl: process.env.NODE_ENV === 'production' ? {
             rejectUnauthorized: true
-        }
+        } : undefined
     });
 }
 exports.getConnection = getConnection;

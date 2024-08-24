@@ -21,6 +21,7 @@ const express = require('express');
 
    const promisePool = pool.promise();
 
+
    // Rutas para usuarios
    app.post('/api/dates', async (req, res) => {
      try {

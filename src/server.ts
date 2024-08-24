@@ -13,7 +13,11 @@ dotenv.config();
 const app = express();
 
 app.use(express.json());
-app.use(cors());
+
+app.use(cors({
+  origin: ['https://appointmentsmedical.netlify.app', 'http://localhost:3000'],
+  credentials: true
+}));
 
 let pool: Pool;
 
@@ -805,4 +809,7 @@ if (require.main === module) {
   app.listen(PORT, () => console.log(`Servidor corriendo en puerto ${PORT}`));
 }
 
+app.get('/', (req, res) => {
+  res.send('API de Citas Médicas funcionando correctamente');
+});
 export default app;

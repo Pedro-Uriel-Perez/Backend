@@ -11,7 +11,10 @@ const database_1 = require("./database");
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 app.use(express_1.default.json());
-app.use((0, cors_1.default)());
+app.use((0, cors_1.default)({
+    origin: ['https://appointmentsmedical.netlify.app', 'http://localhost:3000'],
+    credentials: true
+}));
 let pool;
 async function initializePool() {
     pool = await (0, database_1.getConnection)();
@@ -646,5 +649,8 @@ const PORT = process.env.PORT || 3000;
 if (require.main === module) {
     app.listen(PORT, () => console.log(`Servidor corriendo en puerto ${PORT}`));
 }
+app.get('/', (req, res) => {
+    res.send('API de Citas Médicas funcionando correctamente');
+});
 exports.default = app;
 //# sourceMappingURL=server.js.map
