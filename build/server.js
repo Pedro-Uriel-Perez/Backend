@@ -4,10 +4,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
+const promise_1 = __importDefault(require("mysql2/promise"));
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const cors_1 = __importDefault(require("cors"));
 const dotenv_1 = __importDefault(require("dotenv"));
-const database_1 = require("./database");
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 app.use(express_1.default.json());
@@ -18,13 +18,36 @@ app.use((0, cors_1.default)({
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true
 }));
-let pool;
-async function initializePool() {
-    pool = await (0, database_1.getConnection)();
-}
-initializePool();
+const pool = promise_1.default.createPool({
+    host: process.env.MYSQLHOST,
+    user: process.env.MYSQLUSER,
+    password: process.env.MYSQLPASSWORD,
+    database: process.env.MYSQL_DATABASE,
+    port: parseInt(process.env.MYSQLPORT || '3306'),
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0,
+    ssl: {
+        rejectUnauthorized: true
+    }
+});
+// Middleware para verificar la conexión a la base de datos
+app.use(async (req, res, next) => {
+    try {
+        const connection = await pool.getConnection();
+        connection.release();
+        next();
+    }
+    catch (error) {
+        console.error('Error de conexión a la base de datos:', error);
+        return res.status(500).json({ error: 'La base de datos no está disponible' });
+    }
+});
+app.get('/', (req, res) => {
+    res.send('API de Citas Médicas funcionando correctamente');
+});
 app.get('/api/test', (req, res) => {
-    res.json({ message: 'Backend funcionando correctamentee' });
+    res.json({ message: 'Backend funcionando correctamente' });
 });
 // Ruta de registro
 app.post('/api/register', async (req, res) => {
@@ -677,12 +700,13 @@ app.get('/api/hospital', async (_req, res) => {
         return res.status(500).json({ error: 'Error interno del servidor' });
     }
 });
+// Prueba de conexión a la base de datos
+pool.getConnection()
+    .then(() => console.log('Conexión a la base de datos establecida'))
+    .catch(err => console.error('Error al conectar con la base de datos:', err));
 const PORT = process.env.PORT || 3000;
 if (require.main === module) {
     app.listen(PORT, () => console.log(`Servidor corriendo en puerto ${PORT}`));
 }
-app.get('/', (req, res) => {
-    res.send('API de Citas Médicas funcionando correctamente');
-});
 exports.default = app;
 //# sourceMappingURL=server.js.map

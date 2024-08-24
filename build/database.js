@@ -6,19 +6,22 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.getConnection = void 0;
 const promise_1 = __importDefault(require("mysql2/promise"));
 async function getConnection() {
-    console.log('Intentando conectar a la base de datos');
     try {
-        const pool = await promise_1.default.createPool({
-            host: process.env.DB_HOST,
-            user: process.env.DB_USER,
-            password: process.env.DB_PASSWORD,
-            database: process.env.DB_NAME,
-            port: parseInt(process.env.DB_PORT || '3306'),
+        const pool = promise_1.default.createPool({
+            host: process.env.MYSQLHOST || '',
+            user: process.env.MYSQLUSER || '',
+            password: process.env.MYSQLPASSWORD || '',
+            database: process.env.MYSQL_DATABASE || '',
+            port: parseInt(process.env.MYSQLPORT || '3306'),
+            connectionLimit: 10,
             ssl: {
                 rejectUnauthorized: true
             }
         });
-        console.log('Conexión a la base de datos exitosa');
+        // Prueba la conexión
+        const connection = await pool.getConnection();
+        console.log('Conexión a la base de datos establecida correctamente');
+        connection.release();
         return pool;
     }
     catch (error) {
