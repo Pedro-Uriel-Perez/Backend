@@ -1,16 +1,21 @@
 import express from 'express';
-import mysql, { Pool, OkPacket, RowDataPacket } from 'mysql2/promise';
+import mysql, { Pool ,OkPacket, RowDataPacket } from 'mysql2/promise';
 import bcrypt from 'bcrypt';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { Request, Response } from 'express';
+import { getConnection } from './database';
+
+ 
 
 dotenv.config();
 
 const app = express();
 
 app.use(express.json());
+
 app.options('*', cors());
+
 
 app.use(cors({
   origin: ['https://appointmentsmedical.netlify.app', 'http://localhost:3000'],
@@ -19,41 +24,18 @@ app.use(cors({
   credentials: true
 }));
 
-const pool: Pool = mysql.createPool({
-  host: process.env.MYSQLHOST,
-  user: process.env.MYSQLUSER,
-  password: process.env.MYSQLPASSWORD,
-  database: process.env.MYSQL_DATABASE,
-  port: parseInt(process.env.MYSQLPORT || '3306'),
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0,
-  ssl: {
-    rejectUnauthorized: true
-  }
-});
+let pool: Pool;
 
-// Middleware para verificar la conexión a la base de datos
-app.use(async (req, res, next) => {
-  try {
-    const connection = await pool.getConnection();
-    connection.release();
-    next();
-  } catch (error) {
-    console.error('Error de conexión a la base de datos:', error);
-    return res.status(500).json({ error: 'La base de datos no está disponible' });
-  }
-});
+async function initializePool() {
+  pool = await getConnection();
+}
 
-app.get('/', (req, res) => {
-  res.send('API de Citas Médicas funcionando correctamente');
-});
+initializePool();
+
 
 app.get('/api/test', (req, res) => {
-  res.json({ message: 'Backend funcionando correctamente' });
+  res.json({ message: 'Backend funcionando correctamentee' });
 });
-
-
 
 
 // Ruta de registro
@@ -858,14 +840,13 @@ app.get('/api/hospital', async (_req, res) => {
 });
 
 
-// Prueba de conexión a la base de datos
-pool.getConnection()
-  .then(() => console.log('Conexión a la base de datos establecida'))
-  .catch(err => console.error('Error al conectar con la base de datos:', err));
-
 const PORT = process.env.PORT || 3000;
 if (require.main === module) {
   app.listen(PORT, () => console.log(`Servidor corriendo en puerto ${PORT}`));
 }
+
+app.get('/', (req, res) => {
+  res.send('API de Citas Médicas funcionando correctamente');
+});
 
 export default app;
