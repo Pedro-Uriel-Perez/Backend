@@ -1,12 +1,12 @@
 import express from 'express';
-import mysql, { OkPacket, RowDataPacket } from 'mysql2/promise';
+import mysql, { Pool ,OkPacket, RowDataPacket } from 'mysql2/promise';
 import bcrypt from 'bcrypt';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { Request, Response } from 'express';
+import { getConnection } from './database';
 
  
-
 
 dotenv.config();
 
@@ -15,15 +15,15 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-const pool = mysql.createPool({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0
-});
+let pool: Pool;
+
+async function initializePool() {
+  pool = await getConnection();
+}
+
+initializePool();
+
+
 
 // Ruta de registro
 app.post('/api/register', async (req, res) => {
@@ -800,9 +800,9 @@ app.get('/api/hospital', async (_req, res) => {
 });
 
 
-
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Funcionando este rollo! Servidor corriendo en puerto ${PORT}`));
+if (require.main === module) {
+  app.listen(PORT, () => console.log(`Servidor corriendo en puerto ${PORT}`));
+}
 
-
-
+export default app;

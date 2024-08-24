@@ -4,23 +4,19 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
-const promise_1 = __importDefault(require("mysql2/promise"));
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const cors_1 = __importDefault(require("cors"));
 const dotenv_1 = __importDefault(require("dotenv"));
+const database_1 = require("./database");
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 app.use(express_1.default.json());
 app.use((0, cors_1.default)());
-const pool = promise_1.default.createPool({
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0
-});
+let pool;
+async function initializePool() {
+    pool = await (0, database_1.getConnection)();
+}
+initializePool();
 // Ruta de registro
 app.post('/api/register', async (req, res) => {
     try {
@@ -647,5 +643,8 @@ app.get('/api/hospital', async (_req, res) => {
     }
 });
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Funcionando este rollo! Servidor corriendo en puerto ${PORT}`));
+if (require.main === module) {
+    app.listen(PORT, () => console.log(`Servidor corriendo en puerto ${PORT}`));
+}
+exports.default = app;
 //# sourceMappingURL=server.js.map

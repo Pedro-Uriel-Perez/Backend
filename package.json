@@ -2,13 +2,14 @@
   "name": "citas-medicas-backend",
   "version": "1.0.0",
   "description": "Backend para sistema de citas médicas",
-  "main": "dist/index.js",
+  "main": "build/server.js",
   "scripts": {
     "start": "node build/server.js",
     "build": "tsc",
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts"
   },
   "dependencies": {
+    "bcrypt": "^5.0.1",
     "cors": "^2.8.5",
     "dotenv": "^16.0.3",
     "express": "^4.17.1",
