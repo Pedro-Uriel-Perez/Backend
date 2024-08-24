@@ -69,7 +69,7 @@ app.post('/api/register', async (req, res) => {
 
     // Preparar la consulta SQL y los valores
     let sql = 'INSERT INTO usuarios (nombre, apePaterno, apeMaterno, correo, contrase';
-    const values = [nombre, apePaterno, apeMaterno, correo, hashedPassword];
+    const values: any[] = [nombre, apePaterno, apeMaterno, correo, hashedPassword];
 
     // Añadir campos opcionales si están presentes
     if (edad !== undefined) {
@@ -109,7 +109,22 @@ app.post('/api/register', async (req, res) => {
       console.error('Mensaje de error:', error.message);
       console.error('Stack trace:', error.stack);
     }
-    return res.status(500).json({ error: 'Error interno del servidor' });
+    if (error instanceof Error && 'code' in error) {
+      const mysqlError = error as any;
+      switch (mysqlError.code) {
+        case 'ER_DUP_ENTRY':
+          return res.status(409).json({ error: 'El correo electrónico ya está registrado' });
+        case 'ER_ACCESS_DENIED_ERROR':
+          console.error('Error de acceso a la base de datos');
+          break;
+        default:
+          console.error('Código de error MySQL:', mysqlError.code);
+      }
+    }
+    return res.status(500).json({ 
+      error: 'Error interno del servidor',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
   }
 });
 
