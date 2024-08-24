@@ -90,7 +90,22 @@ app.post('/api/register', async (req, res) => {
             console.error('Mensaje de error:', error.message);
             console.error('Stack trace:', error.stack);
         }
-        return res.status(500).json({ error: 'Error interno del servidor' });
+        if (error instanceof Error && 'code' in error) {
+            const mysqlError = error;
+            switch (mysqlError.code) {
+                case 'ER_DUP_ENTRY':
+                    return res.status(409).json({ error: 'El correo electrónico ya está registrado' });
+                case 'ER_ACCESS_DENIED_ERROR':
+                    console.error('Error de acceso a la base de datos');
+                    break;
+                default:
+                    console.error('Código de error MySQL:', mysqlError.code);
+            }
+        }
+        return res.status(500).json({
+            error: 'Error interno del servidor',
+            details: error instanceof Error ? error.message : 'Unknown error'
+        });
     }
 });
 // Ruta para obtener todos los usuarios o un usuario específico
