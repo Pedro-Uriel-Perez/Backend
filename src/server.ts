@@ -1,22 +1,19 @@
 import express from 'express';
-import mysql, { Pool ,OkPacket, RowDataPacket } from 'mysql2/promise';
+import mysql, { OkPacket, Pool, RowDataPacket } from 'mysql2/promise';
 import bcrypt from 'bcrypt';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { Request, Response } from 'express';
-import { getConnection } from './database';
 
  
-
 dotenv.config();
 
 const app = express();
 
+// Middleware para parsear JSON
 app.use(express.json());
 
-app.options('*', cors());
-
-
+// Configuración de CORS
 app.use(cors({
   origin: ['https://appointmentsmedical.netlify.app', 'http://localhost:3000'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -24,18 +21,24 @@ app.use(cors({
   credentials: true
 }));
 
-let pool: Pool;
-
-async function initializePool() {
-  pool = await getConnection();
-}
-
-initializePool();
-
-
-app.get('/api/test', (req, res) => {
-  res.json({ message: 'Backend funcionando correctamentee' });
+// Configura el pool de conexiones a la base de datos
+const pool: Pool = mysql.createPool({
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
+  port: parseInt(process.env.DB_PORT || '3306'),
+  connectionLimit: 10,
+  ssl: {
+    rejectUnauthorized: false  // Para permitir conexiones SSL sin verificación estricta
+  }
 });
+
+// Ejemplo de ruta para verificar el funcionamiento de la API
+app.get('/', (req: Request, res: Response) => {
+  res.send('API de Citas Médicas funcionando correctamente !!!');
+});
+
 
 
 // Ruta de registro
@@ -840,13 +843,11 @@ app.get('/api/hospital', async (_req, res) => {
 });
 
 
-const PORT = process.env.PORT || 3000;
-if (require.main === module) {
-  app.listen(PORT, () => console.log(`Servidor corriendo en puerto ${PORT}`));
-}
 
-app.get('/', (req, res) => {
-  res.send('API de Citas Médicas funcionando correctamente');
+// Iniciar el servidor
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Servidor corriendo en puerto ${PORT}`);
 });
 
 export default app;

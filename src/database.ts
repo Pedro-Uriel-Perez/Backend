@@ -1,4 +1,5 @@
 import mysql from 'mysql2/promise';
+
 export async function getConnection() {
     console.log('Intentando conectar a la base de datos');
     try {
@@ -9,7 +10,7 @@ export async function getConnection() {
         database: process.env.DB_NAME,
         port: parseInt(process.env.DB_PORT || '3306'),
         ssl: {
-          rejectUnauthorized: true
+          rejectUnauthorized: false  // Clever Cloud puede requerir esta configuración para conexiones SSL
         }
       });
       console.log('Conexión Exitosa');
@@ -18,4 +19,4 @@ export async function getConnection() {
       console.error('Error al conectar con la base de datos:', error);
       throw error;
     }
-  }
+}
