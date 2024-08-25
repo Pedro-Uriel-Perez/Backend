@@ -15,7 +15,7 @@ async function getConnection() {
             database: process.env.DB_NAME,
             port: parseInt(process.env.DB_PORT || '3306'),
             ssl: {
-                rejectUnauthorized: true
+                rejectUnauthorized: false // Clever Cloud puede requerir esta configuración para conexiones SSL
             }
         });
         console.log('Conexión Exitosa');

@@ -36,7 +36,7 @@ const pool: Pool = mysql.createPool({
 
 // Ejemplo de ruta para verificar el funcionamiento de la API
 app.get('/', (req: Request, res: Response) => {
-  res.send('API de Citas Médicas funcionando correctamente !!!');
+  res.send('API de Citas Médicas funcionando correctamente ahora!!!');
 });
 
 

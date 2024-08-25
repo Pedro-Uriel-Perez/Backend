@@ -4,27 +4,36 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
+const promise_1 = __importDefault(require("mysql2/promise"));
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const cors_1 = __importDefault(require("cors"));
 const dotenv_1 = __importDefault(require("dotenv"));
-const database_1 = require("./database");
 dotenv_1.default.config();
 const app = (0, express_1.default)();
+// Middleware para parsear JSON
 app.use(express_1.default.json());
-app.options('*', (0, cors_1.default)());
+// Configuración de CORS
 app.use((0, cors_1.default)({
     origin: ['https://appointmentsmedical.netlify.app', 'http://localhost:3000'],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true
 }));
-let pool;
-async function initializePool() {
-    pool = await (0, database_1.getConnection)();
-}
-initializePool();
-app.get('/api/test', (req, res) => {
-    res.json({ message: 'Backend funcionando correctamentee' });
+// Configura el pool de conexiones a la base de datos
+const pool = promise_1.default.createPool({
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
+    port: parseInt(process.env.DB_PORT || '3306'),
+    connectionLimit: 10,
+    ssl: {
+        rejectUnauthorized: false // Para permitir conexiones SSL sin verificación estricta
+    }
+});
+// Ejemplo de ruta para verificar el funcionamiento de la API
+app.get('/', (req, res) => {
+    res.send('API de Citas Médicas funcionando correctamente ahora!!!');
 });
 // Ruta de registro
 app.post('/api/register', async (req, res) => {
@@ -677,12 +686,10 @@ app.get('/api/hospital', async (_req, res) => {
         return res.status(500).json({ error: 'Error interno del servidor' });
     }
 });
+// Iniciar el servidor
 const PORT = process.env.PORT || 3000;
-if (require.main === module) {
-    app.listen(PORT, () => console.log(`Servidor corriendo en puerto ${PORT}`));
-}
-app.get('/', (req, res) => {
-    res.send('API de Citas Médicas funcionando correctamente');
+app.listen(PORT, () => {
+    console.log(`Servidor corriendo en puerto ${PORT}`);
 });
 exports.default = app;
 //# sourceMappingURL=server.js.map
