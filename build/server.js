@@ -504,8 +504,7 @@ app.post('/api/registrar-pagos', async (req, res) => {
         if (!numeroTarjeta || !nombreTitular || !fechaExpiracion || !codigoSeguridad || !monto || !idHospital) {
             return res.status(400).json({ error: 'Datos de pago incompletos' });
         }
-        const fechaPago = new Date().toISOString();
-        const [result] = await pool.execute('INSERT INTO pagos (numeroTarjeta, nombreTitular, fechaExpiracion, codigoSeguridad, monto, fechaPago, idHospital) VALUES (?, ?, ?, ?, ?, ?, ?)', [numeroTarjeta, nombreTitular, fechaExpiracion, codigoSeguridad, monto, fechaPago, idHospital]);
+        const [result] = await pool.execute('INSERT INTO pagos (numeroTarjeta, nombreTitular, fechaExpiracion, codigoSeguridad, monto, idHospital) VALUES (?, ?, ?, ?, ?, ?)', [numeroTarjeta, nombreTitular, fechaExpiracion, codigoSeguridad, monto, idHospital]);
         if (result.insertId) {
             return res.status(201).json({ message: 'Pago registrado exitosamente', idPago: result.insertId });
         }
